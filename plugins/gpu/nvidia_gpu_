@@ -89,6 +89,7 @@ if [ "$1" = "suggest" ]; then
 	echo "utilization"
 	echo "rx"
 	echo "tx"
+	echo "clock"
 	exit 0
 fi
 
@@ -218,6 +219,19 @@ if [ "$1" = "config" ]; then
 				: $((nGpusCounter=nGpusCounter+1))
 				done
 			;;
+		clock)
+			echo 'graph_title GPU clock'
+			echo 'graph_vlabel MHz'
+			echo 'graph_category sensors'
+			echo "graph_info clock rate of NVIDIA GPUs using driver version $driverVersion"
+			nGpusCounter=0
+			while [ $nGpusCounter -lt "$nGpus" ]
+			do
+				gpuName=$(echo "$nGpusOutput" | sed -n $((nGpusCounter+1))p | cut -d \( -f 1)
+				echo "${name}${nGpusCounter}.info clock rate of $gpuName"
+				: $((nGpusCounter=nGpusCounter+1))
+				done
+			;;
 		*)
 			echo "Can't run without a proper symlink. Exiting."
 			echo "Try running munin-node-configure --suggest."
@@ -290,6 +304,9 @@ case $name in
 			valueGpus="${valueGpus}${bitsPerSecond}"$'\n'
 			: $((nGpusCounter=nGpusCounter+1))
 		done
+		;;
+	clock)
+		valueGpus=$(echo "$smiOutput" | egrep -A 3 "^[[:space:]]*Clocks$" | grep Graphics | cut -d ':' -f 2 | cut -d ' ' -f 2)
 		;;
 	*)
 		echo "Can't run without a proper symlink. Exiting."
